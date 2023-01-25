@@ -7,7 +7,7 @@ class MrpWorkcenter(models.Model):
     _inherit = 'mrp.workcenter'
 
     user_id = fields.Many2one('res.users', string='Responsible person',  required=True)
-    total_prod_capacity = fields.Float(string='Total Production Capacity(min)', required=True, default=1)
+    total_prod_capacity = fields.Float(string='Total Production Capacity(min)', required=True)
     rental_cost = fields.Float(string='Rental Cost', required=True)
     labor_cost = fields.Float(string='Labor Cost', required=True)
     common_area_cost = fields.Float(string='Common area cost', required=True)
@@ -33,5 +33,11 @@ class MrpWorkcenter(models.Model):
 
     @api.depends('total_prod_capacity','rental_cost','labor_cost','common_area_cost')
     def _compute_cost_per_minute(self):
-        total_cost =(self.common_area_cost+self.rental_cost+self.labor_cost)/self.total_prod_capacity
+        cc_rc_lc = self.common_area_cost+self.rental_cost+self.labor_cost
+        try:
+            if cc_rc_lc/self.total_prod_capacity:
+                total_cost = cc_rc_lc/self.total_prod_capacity
+        except ZeroDivisionError as e:
+            raise ValidationError(' Zero division error ')
+        #total_cost =(self.common_area_cost+self.rental_cost+self.labor_cost)/self.total_prod_capacity
         self.cost_per_min = total_cost
